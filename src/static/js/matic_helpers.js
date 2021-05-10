@@ -53,6 +53,25 @@ async function getMatic20(App, token, address, stakingAddress) {
     };
 }
 
+async function getMaticVault(App, vault, address, stakingAddress) {
+  const decimals = await vault.decimals();
+  const token_ = await vault.token();
+  const token = await getMaticToken(App, token_, address);
+  return {
+    address,
+    name : await vault.name(),
+    symbol : await vault.symbol(),
+    totalSupply : await vault.totalSupply(),
+    decimals : decimals,
+    staked: await vault.balanceOf(stakingAddress) / 10 ** decimals,
+    unstaked: await vault.balanceOf(App.YOUR_ADDRESS) / 10 ** decimals,
+    token: token,
+    balance : await vault.balance(),
+    contract: vault,
+    tokens : [address].concat(token.tokens),
+  }
+}
+
 async function getMaticStoredToken(App, tokenAddress, stakingAddress, type) {
   switch (type) {
     case "uniswap": 
@@ -61,6 +80,9 @@ async function getMaticStoredToken(App, tokenAddress, stakingAddress, type) {
     case "matic20":
       const matic20 = new ethers.Contract(tokenAddress, ERC20_ABI, App.provider);
       return await getMatic20(App, matic20, tokenAddress, stakingAddress);
+    case "maticVault":
+      const vault = new ethers.Contract(tokenAddress, BSC_VAULT_ABI, App.provider);
+      return await getMaticVault(App, vault, tokenAddress, stakingAddress);
   }
 }
 
@@ -89,6 +111,15 @@ async function getMaticToken(App, tokenAddress, stakingAddress) {
     catch(err) {
       console.log(err);
       console.log(`Couldn't match ${tokenAddress} to any known token type.`);
+    }
+    try {
+      const VAULT = new ethers.Contract(tokenAddress, BSC_VAULT_ABI, App.provider);
+      const _token = await VAULT.token();
+      const vault = await getMaticVault(App, VAULT, tokenAddress, stakingAddress);
+      window.localStorage.setItem(tokenAddress, "maticVault");
+      return vault;
+    }
+    catch(err) {
     }
   }
 
@@ -336,7 +367,9 @@ const maticTokens = [
   { "id": "stake-dao", "symbol": "SDT", "contract": "0x361A5a4993493cE00f61C32d4EcCA5512b82CE90" },
   { "id": "yield-app", "symbol": "YLD", "contract": "0x4CEBdBCB286101A17D3eA1f7fe7bbDeD2B2053dd" },
   { "id": "aave", "symbol": "AAVE", "contract": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B" },
-  { "id": "krill", "symbol": "KRILL", "contract": "0x05089C9EBFFa4F0AcA269e32056b1b36B37ED71b" }
+  { "id": "polywhale", "symbol": "KRILL", "contract": "0x05089C9EBFFa4F0AcA269e32056b1b36B37ED71b" },
+  { "id": "chainlink", "symbol": "LINK", "contract": "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39" },
+  { "id": "sushi", "symbol": "SUSHI", "contract": "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a" }
 ]
 
 async function getMaticPrices() {

@@ -9,7 +9,9 @@ const FantomTokens = [
   { "id": "dai", "symbol": "DAI", "contract": "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E"},
   { "id": "synthetix-network-token", "symbol": "SNX", "contract": "0x56ee926bD8c72B2d5fa1aF4d9E4Cbb515a1E3Adc"},
   { "id": "sushi", "symbol": "SUSHI", "contract": "0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC"},
-  { "id": "ice-token", "symbol": "ICE", "contract": "0xf16e81dce15b08f326220742020379b855b87df9"}
+  { "id": "ice-token", "symbol": "ICE", "contract": "0xf16e81dce15b08f326220742020379b855b87df9"},
+  { "id": "spookyswap", "symbol": "BOO", "contract": "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE"},
+  { "id": "cream", "symbol": "CREAM", "contract": "0x657A1861c15A3deD9AF0B6799a195a249ebdCbc6"}
 ];
 
 async function getFantomPrices() {
@@ -271,12 +273,12 @@ async function getFantomPoolInfo(app, chefContract, chefAddress, poolIndex, pend
       pendingRewardTokens : 0,
     };
   }
-  const poolToken = await getFantomToken(app, poolInfo.lpToken, chefAddress);
+  const poolToken = await getFantomToken(app, poolInfo.lpToken ?? poolInfo.token, chefAddress);
   const userInfo = await chefContract.userInfo(poolIndex, app.YOUR_ADDRESS);
   const pendingRewardTokens = await chefContract.callStatic[pendingRewardsFunction](poolIndex, app.YOUR_ADDRESS);
   const staked = userInfo.amount / 10 ** poolToken.decimals;
   return {
-      address: poolInfo.lpToken,
+      address: poolInfo.lpToken ?? poolInfo.token,
       allocPoints: poolInfo.allocPoint ?? 1,
       poolToken: poolToken,
       userStaked : staked,
